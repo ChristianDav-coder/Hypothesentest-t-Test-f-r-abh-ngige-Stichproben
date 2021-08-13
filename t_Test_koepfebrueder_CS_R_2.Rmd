@@ -1,0 +1,217 @@
+---
+title: "Hypothesentest t-Test für abhängige Stichproben"
+output: html_notebook
+---
+### 1) Grundlegende Konzepte: Was ist ein t-Test für abhängige Stichproben?
+
+Von "abhängigen Stichproben" wird gesprochen, wenn der Messwert und ein bestimmter anderer Messwert sich gegenseitig beeinflussen. Folgende Szenarien eignen sich für eine verbundene Stichprobe:
+
+Messwiederholung: Die Messwerte stammen von der gleichen Person z. B. Messzeitpunkt #1 verglichen mit Messzeitpunkt #2.
+
+Natürliche Paare: Die Messwerte stammen von verschiedenen Personen, die aber zusammen gehören: Ehefrau – Ehemann, Psychologe – Patient oder Zwillinge.
+
+Matching: Die Messwerte stammen ebenfalls von verschiedenen Personen, die einander zugeordnet wurden. Aufgrund eines vergleichbaren Werts (Drittvariablen) werden Matching-Paare gebildet.
+
+Wichtig: Es werden genau zwei Gruppen verglichen.
+
+Die Zentrale Frage: Unterscheiden sich die Mittelwerte von zwei abhängigen Stichproben?
+
+Um zu prüfen, ob die Mittelwertsunterschiede statistisch signifikant sind, muss die zugehörige Teststatistik berechnet werden. Die Verteilung der Teststatistik t folgt einer theoretischen t-Verteilung, deren Form sich in Abhängigkeit der Freiheitsgrade unterscheidet. Die dem Test zu Grunde liegende t-Verteilung gibt dem Test den Namen t-Test.
+
+Mit Hilfe der Effektstärke wird zum Schluss die praktische Bedeutsamkeit des ermittelten Effekts beurteilt.
+
+
+### 2) Aufgabenstellung - Beschreibung 
+
+Bei einer Gruppe von 25 teilnehmeden erwachsenen Geschwisterpaaren (Brüdern), also natürlichen Paaren, die aus 25 zufällig ausgewählten Familien stammen, wurden die Länge und Breite des Kopfes gemessen. Für die Studie wurden die Kopflängen verglichen. Alle Messangaben erfolgten in mm. Es soll untersucht, ob es eine Unterschied in der Kopflänge Mittlerwert zwichen Brüdern gibt.
+
+
+### 3) Hypothese 
+
+H0: Es gibt keinen Unterschied in der Länge des Kopfes von Brüdern.
+$$M_{b1} = M_{b2}$$
+
+H1: Es gibt einen Unterschied in der Länge des Kopfes von Brüdern.
+$$M_{b1} \neq M_{b2}$$
+
+**Variable 1 = Kopflänge (mm)** AV
+
+**Variable 2 = Brudergrupe(bruder_1/bruder_2)** UV
+
+
+### 4) Voraussetzungen 
+
+Der verbundene t-Test vergleicht zwei Gruppen. Die Abhängigkeit muss voher gegeben sein. In unserer Studie liegen zwei verbundene Stichproben oder Gruppen vor, aber die verschiedenen Messwertpaare sind voneinander unabhängig:
+- Die beiden Gruppen (Bruder 1 und Bruder 2) sind verbundenen durch die Verwandtschaft (Brüder)
+- Die Paare innerhalb der Gruppen sind jedoch unabhängig, weil die Paare (Bruder 1 und Bruder 2) aus verschiedenen, zufällig gewählten Familien stammen. 
+
+Die abhängige Variable ist mind. intervallskaliert -> Ja, Längenmaße der Kopflänge sind metrisch.
+
+Unsere unabhängige Variable muss kategorial sein, daher nominalskaliert, mit zwei Ausprägungen. Die beiden Ausprägungen beziehen sich auf die beiden Gruppen, die wir vergleichen, und sind in diesem Fall jeweils 'Bruder 1' und 'Bruder 2'.
+
+Die Unterschiede zwischen den verbundenen Testwerten sind in der Grundgesamtheit normalverteilt (bei Stichproben > 30 sind Verletzungen unproblematisch). Siehe Deskriptive Statistiken und Korrelation: Die Unterschiede zwischen den verbundenen Testwerten sind in der Stichprobe normalverteilt.
+
+Datensatz:
+```{r}
+path = "C:/Data_Science_Projects/Repository_2/Aufgabe5/koepfebrueder.csv"
+koepfebrueder <- read.csv(path)
+View(koepfebrueder)
+```
+
+
+### 5) Deskriptive Statistiken und Korrelation
+
+```{r}
+
+head(koepfebrueder)
+```
+
+Der zu analysierende Datensatz enthält neben einer Paar-Probandennummer (ID) die vier Messungen der Kopflänge und -Breite von jeweils zwei Brüdern. Daraus wurde für die Auswertung jeweils die Differenz der Kopflänge von Bruder 1 und Bruder 2 gebildet. Die Spalten für die Kopfbreite werden nicht betrachtet. 
+
+
+Es wird die Längendifferenz gebildet und der Tabelle hinzugefügt, die Spalten für die Kopfbreite werden der besseren Übersicht wegen gelöscht:
+
+
+```{r}
+koepfebrueder <- koepfebrueder[c(1,2,4)] 
+head(koepfebrueder)
+```
+
+```{r}
+# Differenz-Spalte erstellen
+zwischen <- koepfebrueder$l1 - koepfebrueder$l2 
+koepfebrueder <- cbind(koepfebrueder, "Differenz" = zwischen)
+View(koepfebrueder)
+```
+
+#### Prüfung der Normalverteilung mittels QQ-Plot
+
+```{r}
+qqPlot(koepfebrueder$Differenz, main = "QQPlot für die Var. Differenz")
+```
+
+Der QQ-Plot zeigt eine Normalverteilung der Differenzen der Kopflängen an, da sich die meisten Datenpunkte nahe der durchgezogenen Linie befinden.
+
+
+#### Prüfung der Normalverteilung mittels Histogramm
+
+```{r}
+hist(koepfebrueder$Differenz, main = "Histogramm der Differenz der Kopflängen von Brüdern", xlab ="Differenzen der Länge", ylab = "Anzahl", col = "gold3")
+```
+
+Die Differenzen der Kopflängen der Brüder zeigen, wie im Histogramm zu sehen ist, annähernd eine Normalverteilung.
+
+#### Korrelation
+
+```{r}
+#library(car)
+scatterplot(koepfebrueder$l1 ~ koepfebrueder$l2 , main = "Streudiagramm der Kopflängen von Bruder 1 und Bruder 2", xlab = "Bruder 1", ylab= "Bruder 2")
+```
+
+Die Verteilung der Kopflängen von Bruder 1 und Bruder 2 im Streudiagramm zeigt eine positive lineare Korrelation der Kopflängen.
+
+
+```{r}
+test <- cor.test(koepfebrueder$l1, koepfebrueder$l2)
+test
+```
+Die 'Kopflänge  von Bruder 1' (l1) und die 'Kopflänge von Bruder 2' (l2) korrelieren signifikant positiv linear (r = 0.7107518, p =  6.842e-05 < 0.05, n = 25).
+
+Bei natürlichen Paaren ist es möglich, dass die Daten der ersten und zweiten Gruppe, also eines Messwertpaars, miteinander korrelieren. Es ist plausibel, dass die Ergebnisse der Messungen der Paare sich ähnlich sind und dass innerhalb eines Messwertpaares eher geringere Unterschiede auftreten als zwischen den Paaren.
+Im R-Output wird daher eine Pearson Korrelation der beiden Messgruppen ausgegeben. Für das Beispiel ergibt sich eine starke Korrelation von r = 0.7107518 (p =  6.842e-05 < 0.05, n = 25), je länger der Kopf von Bruder 1, um so länger auch der Kopf von Bruder 2 und umgekehrt.
+
+
+#### Deskriptive Statistiken
+
+```{r}
+library(psych)
+describe_koepfebrueder <- describe(koepfebrueder)
+describe_koepfebrueder
+```
+
+Es zeigt sich, dass es einen leichten Mittelwertsunterschied zwischen den Längen der Köpfe von Brüdern gibt: l1-mean = 185.72 mm (SD = 9.76 mm, n = 25), l2-mean = 183.84 mm (SD = 10.04 mm, n = 25). Allerdings ist der Unterschied mit 1.88 mm (l1-mean > l2-mean) sehr klein und die Abweichung liegt innerhalb der Standardabweichungen. Die Mediane unterscheiden sich auch leicht, (l1-med = 188 mm > l2-med = 185 mm). Sie liegen nahe bei den Mittelwerten (innerhalb einer Standardabweichung). Somit dürften die Mittelwertsunterschiede nicht signifikant sein, was im Folgenden überprüft wird.
+
+
+### 6) Ergebnisse des t-Tests für abhängige Stichproben
+
+```{r}
+ttest_koepfebrueder<- t.test(koepfebrueder$l1, koepfebrueder$l2, alternative = "two.sided", paired = TRUE, conf.level = 0.95)
+
+ttest_koepfebrueder
+```
+
+Hier wird der ungerichtete t-test betrachtet, weil wir nur wissen wollen, ob ein Unterschied besteht oder nicht (daher Unterschiedshypothese). Die Richtung ist daher in dieser Betrachtung nicht relevant.
+
+
+t-kritisch
+
+```{r}
+qt(0.975, df=24)
+```
+
+Die Teststatistik beträgt t (24) = 1.24754 (t-empirsch (1.2475) ist kleiner als t-kritisch (2.063899)), und der zugehörige Signifikanzwert p(empirisch) = 0.2242 > p(kritisch) = 0.05. Damit ist der Unterschied nicht signifikant: Die Mittelwerte der beiden Messungen der Kopflängen von Bruder 1 und Bruder 2 (l1 und l2)  unterscheiden sich somit nicht signifikant voneinader (t (24) = 1.24754, p = 0.2242, n = 25).<br>
+
+Hier ist schon ersichtlich, dass die H0 angenommen werden muss.
+Für die Vollständigkeit der statistischen Untersuchungen wird im Folgenden noch die Effektstärke betrachtet.
+
+
+### 7) Berechnung der Effektstärke 
+
+#### Cohen und Pearson
+
+$$r=\left\| \sqrt {\frac{t^2}{t^2+df}} \right\|$$
+
+
+```{r}
+eff_fret <- abs(sqrt(ttest_koepfebrueder$statistic^2 / (ttest_koepfebrueder$statistic^2 + ttest_koepfebrueder$parameter)))
+
+sprintf("Effektstärke: %.4f",eff_fret)
+```
+
+Zur Beurteilung der Größe des Effektes dient die Einteilung von Cohen (1992):
+
+$$ \begin{align} \text{Schwacher Effekt: } 0.10 &< ||r|| < 0.30 \\ \text{Schwacher bis mittlerer Effekt: } 0.30 &= ||r|| \\ \text{Mittlerer Effekt: } 0.30 &< ||r|| < 0.50 \\ \text{Mittlerer bis starker Effekt: }0.50 &= ||r|| \\ \text{Starker Effekt: } 0.50 &< ||r|| \end{align} $$
+Die ermittelte Effektstärke von 0.25 entspricht einem schwachen Effekt, es liegt also ein schwacher Effekt vor, der wahrscheinlich dem Zufall geschuldet ist.
+
+
+<br>
+
+#### Alternative Berechnung mit Hedges ĝ
+
+$$\rm{Hedges}\ \hat{g}=\left|\frac{\hat{\mu_1}-\hat{\mu_2}}{\hat{\sigma_{d}}}\right|$$
+
+```{r}
+
+diff <- ttest_koepfebrueder$estimate
+
+sed <- sd(koepfebrueder$l1 - koepfebrueder$l2)
+
+g <- diff/sed
+
+sprintf("Effektstärke: %.4f",g)
+```
+
+
+Zur Beurteilung der Größe des Effektes:
+
+$$\begin{align} \text{Schwacher Effekt: } 0.20 &< ||g|| < 0.50 \\ \text{Schwacher bis mittlerer Effekt: } 0.50 &= ||g|| \\ \text{Mittlerer Effekt: } 0.50 &< ||g|| < 0.80 \\ \text{Mittlerer bis starker Effekt: }0.80 &= ||g|| \\ \text{Starker Effekt: } 0.80 &< ||g|| \end{align} $$
+
+Dasselbe Ergebnis:
+Eine Effektstärke von 0.25 entspricht einem schwachen Effekt, es liegt also ein schwacher Effekt vor.
+
+Kommentar zum Ergebnis der schwachen Effektstärke:
+Da die Mittelwertsunterschiede bereits als nicht signifikant ermittelt wurden, bietet die Berechnung der Effektstärke keinen Mehrwert, denn das Ergebnis ist eventuell zufällig. Das Ergebnis eines Schwachen Effekts kann nicht auf die Grundgesamtheit übertragen werden.  Die H1 wird also trotzdem verworfen und die H0 angenommen.
+
+
+### 8) Eine Aussage
+
+Es zeigt sich, dass die Kopflängen von Brüdern sich statistisch nicht signifikant unterscheiden (t (24) = 1.24754, p = 0.2242, n = 25). Der schwache Mittelwertsunterschied der Gruppen 'Kopflänge von Bruder 1' (l1) und 'Kopflänge von Bruder 2' (l2) ist sehr klein (1.88 mm): M (l1) = 185.72 mm, SD = 9.76 mm, n = 25; M (l2) = 183.84 mm, SD = 10,04 mm, n = 25.
+<br>
+Die der Vollständigkeit halber ermittelte Effektstärke nach Cohen (1992) liegt bei r = 0.25 und entspricht damit einem schwachen Effekt, der jedoch eher dem Zufall geschuldet ist. <br>
+H1 wird dementsprechend verworfen, H0 wird angenommen: Die Kopflängen von Brüdern unterscheiden sich nicht.
+
+
+
+
+
+
