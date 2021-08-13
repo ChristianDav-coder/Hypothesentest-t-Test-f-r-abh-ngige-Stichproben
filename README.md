@@ -1,1 +1,1 @@
-# Hypothesentest-t-Test-f-r-abh-ngige-Stichproben
+# Hypothesentest-t-Test-für-abhängige-Stichproben
